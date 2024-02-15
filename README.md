@@ -27,4 +27,6 @@ Tech used: HTML, CSS, JavaScript
         ⬛ A display that declares the winner
         ⬛ A tally of wins for each player
         
-    
+   
+
+
