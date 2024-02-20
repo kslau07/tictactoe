@@ -6,6 +6,9 @@ Tech used: HTML, CSS, JavaScript
 
 ## Checklist
 
+    Useful links:
+        Debugging nodejs: https://betterstack.com/community/guides/scaling-nodejs/nodejs-debugging/
+
     ⬛ Gameboard will be an array
     ⬛ Players will be stored in objects
     ⬛ One object will control the flow of the game
