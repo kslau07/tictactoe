@@ -33,11 +33,68 @@ const gameboard = (function () {
     const targetCell = flatBoard[index];
     targetCell.setValue(player.marker);
   };
-  return { getBoard, isValidCell, markCell };
+
+  const isWinner = (player) => {
+    let threeInARow = "";
+    Array.from({ length: 3 }, () => (threeInARow += player.marker));
+    const winLines = [
+      [
+        [0, 0],
+        [0, 1],
+        [0, 2],
+      ],
+      [
+        [1, 0],
+        [1, 1],
+        [1, 2],
+      ],
+      [
+        [2, 0],
+        [2, 1],
+        [2, 2],
+      ],
+      [
+        [0, 0],
+        [1, 0],
+        [2, 0],
+      ],
+      [
+        [0, 1],
+        [1, 1],
+        [2, 1],
+      ],
+      [
+        [0, 2],
+        [1, 2],
+        [2, 2],
+      ],
+      [
+        [0, 0],
+        [1, 1],
+        [2, 2],
+      ],
+      [
+        [0, 2],
+        [1, 1],
+        [2, 0],
+      ],
+    ];
+    let checkLine = ""
+    for (const winAry of winLines) {
+      for (const cellPos of winAry) {
+        const cellValue = board[cellPos[0]][cellPos[1]].getValue()
+        checkLine += cellValue
+      }
+      if (checkLine == threeInARow) return true
+      checkLine = ""
+    }
+  };
+
+  return { getBoard, isValidCell, markCell, isWinner };
 })();
 
-const displayController = (function (gb) {
-  const board = gb.getBoard();
+const displayController = (function (gamebrd) {
+  const board = gamebrd.getBoard();
 
   const printBoard = () => {
     const boardWithCellValues = board.map((row) =>
@@ -66,9 +123,16 @@ const gameController = (function (gameboard, displayController) {
   const playerOne = playerFactory("Steve", "X");
   const playerTwo = playerFactory("Mary", "O");
   const { printBoard } = displayController;
-  const { isValidCell, markCell } = gameboard;
+  const { isValidCell, markCell, isWinner } = gameboard;
   let currentPlayer;
   const getCurrentPlayer = () => currentPlayer;
+  const taunt = function () {
+    if (getCurrentPlayer()) {
+      return getCurrentPlayer().taunt();
+    } else {
+      return "Use .newGame() to begin a game!";
+    }
+  };
 
   const switchPlayer = () =>
     (currentPlayer = getCurrentPlayer() == playerOne ? playerTwo : playerOne);
@@ -77,12 +141,12 @@ const gameController = (function (gameboard, displayController) {
     switchPlayer();
     // TODO: We could prompt for each player's name here
     console.log(`New game started!`);
+    printBoard();
   };
 
   const isValidInput = (input) => {
-    const isnum = /^[1-9]$/.test(input);
-    if (!isnum) return false;
-
+    const isNum = /^[1-9]$/.test(input);
+    if (!isNum) return false;
     return true;
   };
 
@@ -91,7 +155,6 @@ const gameController = (function (gameboard, displayController) {
       return console.log("Please use .newGame() to begin a new game!");
 
     console.log(`It's ${currentPlayer.name}'s turn!`);
-    printBoard();
 
     let input;
     while (true) {
@@ -102,8 +165,12 @@ const gameController = (function (gameboard, displayController) {
     }
 
     markCell(index, currentPlayer);
+    printBoard();
+    if (isWinner(currentPlayer)) {
+      return `${currentPlayer.name} won!`;
+    }
     switchPlayer();
   };
 
-  return { newGame, playRound };
+  return { newGame, playRound, taunt };
 })(gameboard, displayController);
