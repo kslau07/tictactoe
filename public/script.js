@@ -1,4 +1,4 @@
-// TODO: Move hasWon() from gameboard to gameController
+// TODO: Do not allow player to move on occupied cell
 
 const Cell = function () {
   let value = "F";
@@ -21,21 +21,34 @@ const gameboard = (function () {
 
   const getBoard = () => board;
 
-  const isValidCell = (coord) => {
-    const targetCell = board[coord[0]][coord[1]];
-
-    if (targetCell.getValue() == "F") {
-      return true;
-    } else {
-      console.log("This spot has already been taken!");
-      return false;
-    }
-  };
-
   const markCell = function (coord, player) {
     const targetCell = board[coord[0]][coord[1]];
     targetCell.setValue(player.marker);
   };
+
+  return { getBoard, markCell };
+})();
+
+const playerProto = {
+  // Shared functionality goes in proto
+};
+
+function playerFactory(name, marker) {
+  let player = Object.create(playerProto);
+  player.name = name;
+  player.marker = marker;
+  return player;
+}
+
+const gameController = (function (gameboard) {
+  const playerOne = playerFactory("Steve", "X");
+  const playerTwo = playerFactory("Mary", "O");
+  let currentPlayer = playerOne;
+  const getCurrentPlayer = () => currentPlayer;
+  const { getBoard, markCell } = gameboard;
+
+  const switchPlayer = () =>
+    (currentPlayer = getCurrentPlayer() == playerOne ? playerTwo : playerOne);
 
   const hasWon = (player) => {
     let threeInARow = "";
@@ -87,6 +100,7 @@ const gameboard = (function () {
 
     for (const winAry of winLines) {
       for (const cellCoord of winAry) {
+        const board = getBoard();
         const cellValue = board[cellCoord[0]][cellCoord[1]].getValue();
         checkLine += cellValue;
       }
@@ -95,94 +109,15 @@ const gameboard = (function () {
     }
   };
 
-  return { getBoard, isValidCell, markCell, hasWon };
-})();
-
-const playerProto = {
-  // Shared functionality goes in proto
-};
-
-function playerFactory(name, marker) {
-  let player = Object.create(playerProto);
-  player.name = name;
-  player.marker = marker;
-  return player;
-}
-
-const gameController = (function (gameboard) {
-  const playerOne = playerFactory("Steve", "X");
-  const playerTwo = playerFactory("Mary", "O");
-  let currentPlayer;
-  const getCurrentPlayer = () => currentPlayer;
-  const { getBoard, isValidCell, markCell, hasWon } = gameboard;
-
-  const switchPlayer = () =>
-    (currentPlayer = getCurrentPlayer() == playerOne ? playerTwo : playerOne);
-
-  const newGame = () => {
-    switchPlayer();
-    // TODO: We could prompt for each player's name here
-    console.log(`New game started!`);
-    printBoard();
-  };
-
-  const isValidInput = (input) => {
-    const isNum = /^[1-9]$/.test(input);
-    if (!isNum) return false;
-    return true;
-  };
-
-  const convertInputToCoord = (input) => {
-    const row = Math.floor((input - 1) / 3);
-    const col = (input + 2) % 3;
-    return [row, col];
-    index = Number(input) - 1;
-    // 1 should be [0][0]
-    // 9 should be [2][2]
-
-    // To obtain column #
-    // 1 % 3 = 1
-    // 2 % 3 = 2
-    // 3 % 3 = 0
-    // Add 2 and mod % to get column:
-    // 1 -> (1+2) % 3 = 0
-    // 2 -> (2+2) % 3 = 1
-    // 3 -> (3+2) % 3 = 2
-    // 4 -> (4+2) % 3 = 0
-    //
-    // To obtain row number:
-    // 1 -> Math.floor( (1-1)/3 ) = 0
-    // 2 -> Math.floor( (2-1)/3 ) = 0
-    // 3 -> Math.floor( (3-1)/3 ) = 0
-    // 4 -> Math.floor( (4-1)/3 ) = 1
-    // 5 -> Math.floor( (5-1)/3 ) = 1
-    // 6 -> Math.floor( (6-1)/3 ) = 1
-    // 7 -> Math.floor( (7-1)/3 ) = 1
-  };
-
-  const playRound = () => {
-    if (typeof currentPlayer == "undefined")
-      return console.log("Please use .newGame() to begin a new game!");
-
-    console.log(`It's ${currentPlayer.name}'s turn!`);
-
-    let input;
-    while (true) {
-      input = prompt("Please choose a space between 1-9");
-      if (!isValidInput(input)) continue;
-      coord = convertInputToCoord(input);
-      if (isValidCell(coord)) break;
-    }
-
-    markCell(coord, currentPlayer);
-    printBoard();
+  const playRound = (clickedCoord) => {
+    markCell(clickedCoord, currentPlayer);
     if (hasWon(currentPlayer)) {
-      return `${currentPlayer.name} won!`;
+      console.log("won!");
     }
     switchPlayer();
   };
 
-  return { newGame, playRound, getBoard, getCurrentPlayer };
+  return { playRound, getBoard, getCurrentPlayer };
 })(gameboard);
 
 function displayController() {
@@ -192,11 +127,29 @@ function displayController() {
 
   const updateScreen = () => {
     boardDiv.textContent = ""; // Clear the board
-
-    const board = game.getBoard;
+    const board = game.getBoard();
     const currentPlayer = game.getCurrentPlayer();
     turnDiv.textContent = "screenController has changed this";
+    board.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        const cellButton = document.createElement("button"); // Anything clickable should be a button
+        cellButton.textContent = cell.getValue();
+        cellButton.dataset.coord = `${rowIndex}${colIndex}`;
+        cellButton.classList.add("cell");
+        boardDiv.appendChild(cellButton);
+      });
+    });
   };
+
+  function clickHandlerBoard(e) {
+    const clickedCoordString = e.target.dataset.coord;
+    if (!clickedCoordString) return;
+
+    const coord = clickedCoordString.split("").map((char) => Number(char));
+    game.playRound(coord);
+    updateScreen();
+  }
+  boardDiv.addEventListener("click", clickHandlerBoard);
 
   updateScreen(); // Initial render
 }

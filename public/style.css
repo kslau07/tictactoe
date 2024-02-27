@@ -30,8 +30,12 @@ body {
 }
 #board {
   display: grid;
+  gap: 1rem;
   grid-template-columns: 1fr 25vw 1fr;
   background-color: purple;
+}
+.cell {
+  height: 50px;
 }
 #buttons {
   background-color: blue;
