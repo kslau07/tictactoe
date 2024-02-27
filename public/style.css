@@ -1,1 +1,43 @@
+html {
+  height: 100%;
+}
 
+body {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 23% 1fr 5%;
+}
+
+#header {
+  display: grid;
+  align-items: center;
+  background-color: yellow;
+}
+#title {
+  text-align: center;
+  font-size: 5rem;
+}
+
+#main {
+  display: grid;
+  grid-template-rows: 1fr 25vw 1fr;
+}
+#score {
+  background-color: red;
+}
+#board-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 25vw 1fr;
+}
+#board {
+  grid-column-start: 2;
+  grid-column-end: 3;
+  background-color: gray;
+}
+#buttons {
+  background-color: blue;
+}
+
+#footer {
+  background-color: gray;
+}

@@ -2,6 +2,9 @@
 
 [Link to project specs](https://www.theodinproject.com/lessons/javascript-tic-tac-toe)
 
+![Sketch of
+game](https://github.com/kslau07/tictactoe/blob/main/tictactoe_sketch.png?raw=true)
+
 Tech used: HTML, CSS, JavaScript
 
 ## Checklist
@@ -30,4 +33,7 @@ Tech used: HTML, CSS, JavaScript
         ⬛ A button to begin and to start a new round
         ⬛ A display that declares the winner
         ⬛ A tally of wins for each player
+
+        ⬛ Rotate the board slightly, 1-3°, maybe lines too
+        
 

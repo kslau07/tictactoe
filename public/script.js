@@ -18,9 +18,8 @@ const gameboard = (function () {
   }
 
   const getBoard = () => board;
-  const flatBoard = board.flat();
-  const isValidCell = (index) => {
-    const targetCell = flatBoard[index];
+  const isValidCell = (coord) => {
+    const targetCell = board[coord[0]][coord[1]];
 
     if (targetCell.getValue() == "F") {
       return true;
@@ -29,12 +28,13 @@ const gameboard = (function () {
       return false;
     }
   };
-  const markCell = function (index, player) {
-    const targetCell = flatBoard[index];
+
+  const markCell = function (coord, player) {
+    const targetCell = board[coord[0]][coord[1]];
     targetCell.setValue(player.marker);
   };
 
-  const isWinner = (player) => {
+  const hasWon = (player) => {
     let threeInARow = "";
     Array.from({ length: 3 }, () => (threeInARow += player.marker));
     const winLines = [
@@ -79,18 +79,18 @@ const gameboard = (function () {
         [2, 0],
       ],
     ];
-    let checkLine = ""
+    let checkLine = "";
     for (const winAry of winLines) {
-      for (const cellPos of winAry) {
-        const cellValue = board[cellPos[0]][cellPos[1]].getValue()
-        checkLine += cellValue
+      for (const cellCoord of winAry) {
+        const cellValue = board[cellCoord[0]][cellCoord[1]].getValue();
+        checkLine += cellValue;
       }
-      if (checkLine == threeInARow) return true
-      checkLine = ""
+      if (checkLine == threeInARow) return true;
+      checkLine = "";
     }
   };
 
-  return { getBoard, isValidCell, markCell, isWinner };
+  return { getBoard, isValidCell, markCell, hasWon };
 })();
 
 const displayController = (function (gamebrd) {
@@ -111,8 +111,8 @@ const playerProto = {
     console.log(`${this.name} says, "Haha, I am going to win!"`);
   },
 };
+
 function playerFactory(name, marker) {
-  // Note that Object.create / factory functions are considered outdated
   let player = Object.create(playerProto);
   player.name = name;
   player.marker = marker;
@@ -123,7 +123,7 @@ const gameController = (function (gameboard, displayController) {
   const playerOne = playerFactory("Steve", "X");
   const playerTwo = playerFactory("Mary", "O");
   const { printBoard } = displayController;
-  const { isValidCell, markCell, isWinner } = gameboard;
+  const { isValidCell, markCell, hasWon } = gameboard;
   let currentPlayer;
   const getCurrentPlayer = () => currentPlayer;
   const taunt = function () {
@@ -150,6 +150,34 @@ const gameController = (function (gameboard, displayController) {
     return true;
   };
 
+  const convertInputToCoord = (input) => {
+    const row = Math.floor((input - 1) / 3);
+    const col = (input + 2) % 3;
+    return [row, col];
+    index = Number(input) - 1;
+    // 1 should be [0][0]
+    // 9 should be [2][2]
+
+    // To obtain column #
+    // 1 % 3 = 1
+    // 2 % 3 = 2
+    // 3 % 3 = 0
+    // Add 2 and mod % to get column:
+    // 1 -> (1+2) % 3 = 0
+    // 2 -> (2+2) % 3 = 1
+    // 3 -> (3+2) % 3 = 2
+    // 4 -> (4+2) % 3 = 0
+    //
+    // To obtain row number:
+    // 1 -> Math.floor( (1-1)/3 ) = 0
+    // 2 -> Math.floor( (2-1)/3 ) = 0
+    // 3 -> Math.floor( (3-1)/3 ) = 0
+    // 4 -> Math.floor( (4-1)/3 ) = 1
+    // 5 -> Math.floor( (5-1)/3 ) = 1
+    // 6 -> Math.floor( (6-1)/3 ) = 1
+    // 7 -> Math.floor( (7-1)/3 ) = 1
+  };
+
   const playRound = () => {
     if (typeof currentPlayer == "undefined")
       return console.log("Please use .newGame() to begin a new game!");
@@ -160,13 +188,13 @@ const gameController = (function (gameboard, displayController) {
     while (true) {
       input = prompt("Please choose a space between 1-9");
       if (!isValidInput(input)) continue;
-      index = Number(input) - 1;
-      if (isValidCell(index)) break;
+      coord = convertInputToCoord(input);
+      if (isValidCell(coord)) break;
     }
 
-    markCell(index, currentPlayer);
+    markCell(coord, currentPlayer);
     printBoard();
-    if (isWinner(currentPlayer)) {
+    if (hasWon(currentPlayer)) {
       return `${currentPlayer.name} won!`;
     }
     switchPlayer();
