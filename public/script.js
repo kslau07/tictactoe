@@ -1,3 +1,5 @@
+// TODO: Move hasWon() from gameboard to gameController
+
 const Cell = function () {
   let value = "F";
   const getValue = () => value;
@@ -18,6 +20,7 @@ const gameboard = (function () {
   }
 
   const getBoard = () => board;
+
   const isValidCell = (coord) => {
     const targetCell = board[coord[0]][coord[1]];
 
@@ -79,7 +82,9 @@ const gameboard = (function () {
         [2, 0],
       ],
     ];
+
     let checkLine = "";
+
     for (const winAry of winLines) {
       for (const cellCoord of winAry) {
         const cellValue = board[cellCoord[0]][cellCoord[1]].getValue();
@@ -93,23 +98,8 @@ const gameboard = (function () {
   return { getBoard, isValidCell, markCell, hasWon };
 })();
 
-const displayController = (function (gamebrd) {
-  const board = gamebrd.getBoard();
-
-  const printBoard = () => {
-    const boardWithCellValues = board.map((row) =>
-      row.map((cell) => cell.getValue()),
-    );
-    console.log(boardWithCellValues);
-  };
-
-  return { printBoard };
-})(gameboard);
-
 const playerProto = {
-  taunt() {
-    console.log(`${this.name} says, "Haha, I am going to win!"`);
-  },
+  // Shared functionality goes in proto
 };
 
 function playerFactory(name, marker) {
@@ -119,20 +109,12 @@ function playerFactory(name, marker) {
   return player;
 }
 
-const gameController = (function (gameboard, displayController) {
+const gameController = (function (gameboard) {
   const playerOne = playerFactory("Steve", "X");
   const playerTwo = playerFactory("Mary", "O");
-  const { printBoard } = displayController;
-  const { isValidCell, markCell, hasWon } = gameboard;
   let currentPlayer;
   const getCurrentPlayer = () => currentPlayer;
-  const taunt = function () {
-    if (getCurrentPlayer()) {
-      return getCurrentPlayer().taunt();
-    } else {
-      return "Use .newGame() to begin a game!";
-    }
-  };
+  const { getBoard, isValidCell, markCell, hasWon } = gameboard;
 
   const switchPlayer = () =>
     (currentPlayer = getCurrentPlayer() == playerOne ? playerTwo : playerOne);
@@ -200,5 +182,23 @@ const gameController = (function (gameboard, displayController) {
     switchPlayer();
   };
 
-  return { newGame, playRound, taunt };
-})(gameboard, displayController);
+  return { newGame, playRound, getBoard, getCurrentPlayer };
+})(gameboard);
+
+function displayController() {
+  const game = gameController;
+  const turnDiv = document.getElementById("turn");
+  const boardDiv = document.getElementById("board");
+
+  const updateScreen = () => {
+    boardDiv.textContent = ""; // Clear the board
+
+    const board = game.getBoard;
+    const currentPlayer = game.getCurrentPlayer();
+    turnDiv.textContent = "screenController has changed this";
+  };
+
+  updateScreen(); // Initial render
+}
+
+displayController();

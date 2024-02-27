@@ -20,19 +20,18 @@ body {
 
 #main {
   display: grid;
-  grid-template-rows: 1fr 25vw 1fr;
+  grid-template-rows: 1fr 1fr 25vw 1fr;
 }
 #score {
   background-color: red;
 }
-#board-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 25vw 1fr;
+#turn {
+  background-color: greenyellow;
 }
 #board {
-  grid-column-start: 2;
-  grid-column-end: 3;
-  background-color: gray;
+  display: grid;
+  grid-template-columns: 1fr 25vw 1fr;
+  background-color: purple;
 }
 #buttons {
   background-color: blue;
