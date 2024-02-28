@@ -1,3 +1,5 @@
+"use strict";
+
 // TODO: Do not allow player to move on occupied cell
 
 const Cell = function () {
@@ -26,31 +28,28 @@ const gameboard = (function () {
     targetCell.setValue(player.marker);
   };
 
-  return { getBoard, markCell };
-})();
+  const isCellUnoccupied = (coord) => {
+    const targetCell = board[coord[0]][coord[1]];
+    return targetCell.getValue() == "F" ? true : false;
+  };
 
-const playerProto = {
-  // Shared functionality goes in proto
-};
+  const isTie = () => {
+    // FIXME: We cannot return early from a forEach loop. The forEach method is
+    // passed a callback function from us, this callback will be invoked n
+    // times. In our callback function, we can use 3 parameters: item, index
+    // and array. 
 
-function playerFactory(name, marker) {
-  let player = Object.create(playerProto);
-  player.name = name;
-  player.marker = marker;
-  return player;
-}
+    board.forEach((row) => {
+    row.forEach((cell) => {
+        // if (cell.getValue() == "F") return console.log("false");
+        // if (cell.getValue() == "F") return false;
+        return false
+      });
+    });
+    return true;
+  };
 
-const gameController = (function (gameboard) {
-  const playerOne = playerFactory("Steve", "X");
-  const playerTwo = playerFactory("Mary", "O");
-  let currentPlayer = playerOne;
-  const getCurrentPlayer = () => currentPlayer;
-  const { getBoard, markCell } = gameboard;
-
-  const switchPlayer = () =>
-    (currentPlayer = getCurrentPlayer() == playerOne ? playerTwo : playerOne);
-
-  const hasWon = (player) => {
+  const isWin = (player) => {
     let threeInARow = "";
     Array.from({ length: 3 }, () => (threeInARow += player.marker));
     const winLines = [
@@ -109,15 +108,60 @@ const gameController = (function (gameboard) {
     }
   };
 
-  const playRound = (clickedCoord) => {
-    markCell(clickedCoord, currentPlayer);
-    if (hasWon(currentPlayer)) {
-      console.log("won!");
+  return {
+    getBoard,
+    markCell,
+    isCellUnoccupied,
+    isTie,
+    isWin,
+  };
+})();
+
+const playerProto = {
+  // Shared functionality goes in proto
+};
+
+function playerFactory(name, marker) {
+  let player = Object.create(playerProto);
+  player.name = name;
+  player.marker = marker;
+  return player;
+}
+
+const gameController = (function (gameboard) {
+  const playerOne = playerFactory("Steve", "X");
+  const playerTwo = playerFactory("Mary", "O");
+  let currentPlayer;
+  let gameStatus;
+  const getCurrentPlayer = () => currentPlayer;
+  const { getBoard, markCell, isCellUnoccupied, isTie, isWin } = gameboard;
+
+  const switchPlayer = () =>
+    (currentPlayer = getCurrentPlayer() == playerOne ? playerTwo : playerOne);
+
+  const checkGameStatus = () => {
+    if (isTie()) {
+      gameStatus = "tie";
+    } else if (isWin(currentPlayer)) {
+      gameStatus = "win";
     }
-    switchPlayer();
   };
 
-  return { playRound, getBoard, getCurrentPlayer };
+  const getGameStatus = () => gameStatus;
+
+  const playRound = (clickedCoord) => {
+    switchPlayer();
+    markCell(clickedCoord, currentPlayer);
+    checkGameStatus();
+  };
+
+  return {
+    playRound,
+    getBoard,
+    getCurrentPlayer,
+    isCellUnoccupied,
+    getGameStatus,
+  };
 })(gameboard);
 
 function displayController() {
@@ -128,8 +172,13 @@ function displayController() {
   const updateScreen = () => {
     boardDiv.textContent = ""; // Clear the board
     const board = game.getBoard();
-    const currentPlayer = game.getCurrentPlayer();
-    turnDiv.textContent = "screenController has changed this";
+    const gameStatus = game.getGameStatus();
+    if (gameStatus == "tie") {
+      console.log("it's a tie!");
+    }
+    if (gameStatus == "win") {
+      console.log("it's a win!");
+    }
     board.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         const cellButton = document.createElement("button"); // Anything clickable should be a button
@@ -146,8 +195,12 @@ function displayController() {
     if (!clickedCoordString) return;
 
     const coord = clickedCoordString.split("").map((char) => Number(char));
-    game.playRound(coord);
-    updateScreen();
+    if (game.isCellUnoccupied(coord)) {
+      game.playRound(coord);
+      updateScreen();
+    } else {
+      turnDiv.textContent = "This space is occupied!";
+    }
   }
   boardDiv.addEventListener("click", clickHandlerBoard);
 
